@@ -1,0 +1,58 @@
+data:
+  type: text_list
+  class_names:
+    - 荣誉挂牌
+    - 天际挂牌
+    - 悬空挂牌
+    - 地面挂牌
+    - 普通挂牌
+  soft_label: false  # 是否使用 0~1 标签, 仅在二分类时可用
+  one_hot_label: true  # 是否支持多标签, 支持focal loss和bce loss
+  train:
+    data_dir: /workspace/dataset/board_types  # 训练数据跟目录
+    ann_file: annotation/train.txt  # 训练集标注文件
+    batch_size: 16  # 每张卡的batch size
+    transform:
+      - resize: 224
+      - color_shift: 0.1
+      - normalize
+      - to_tensor
+  val:
+    data_dir: /workspace/dataset/board_types  # 训练数据跟目录
+    ann_file: annotation/val.txt  # 训练集标注文件
+    batch_size: 16  # 每张卡的batch size
+    transform:
+      - resize: 224
+      - normalize
+      - to_tensor
+
+model:
+  backbone:
+    type: DINOv2_ViT-B_14
+    hidden_size: 768
+    pretrained: true
+  load_from: null
+  resume: false
+  frozen_parameters:
+    - transformer
+
+loss:
+  focal: 1.0
+  
+optimizer:
+  type: adam
+  lr: 0.0001
+
+scheduler:
+  type: cos
+
+runner:
+  epochs: 20
+  num_workers: 2  # 每张卡的 num_workers
+  fp16: true  # 是否使用混合精度训练, 任务量多时可以使用混合精度节省显存
+  
+misc:
+  no_eval: false  # 是否在训练时不进行验证
+  log_iter: 100  # 多少个iter记录一次loss
+  val_freq: 1  # 多少epoch验证一次
+  save_freq: 1  # 多少epoch保存一次
